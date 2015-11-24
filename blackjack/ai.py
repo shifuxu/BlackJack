@@ -160,59 +160,59 @@ def initialize_state_action_value_map():
 def print_state_action_value_map(M):
    for useable in [True, False]:
       if useable:
-         print 'Usable ace'
+         print('Usable ace')
       else:
-         print 'No useable ace'
-      print 'Values for staying:'
-      for val in range(21,10,-1):
-         for card in range(1,11):
-            print '%5.2f' % M[((card,val,useable),False)], ' ',
-         print '| %d' % val
-      print 'Values for hitting:'
-      for val in range(21,10,-1):
-         for card in range(1,11):
-            print '%5.2f' % M[((card,val,useable),True)], ' ',
-         print '| %d' % val
-      print ' '
+         print('No useable ace')
+      print('Values for staying:')
+      for val in range(21, 10, -1):
+         for card in range(1, 11):
+            print('%5.2f' % M[((card, val, useable), False)], ' ',)
+         print('| %d' % val)
+      print('Values for hitting:')
+      for val in range(21, 10, -1):
+         for card in range(1, 11):
+            print('%5.2f' % M[((card, val, useable), True)], ' ',)
+         print('| %d' % val)
+      print(' ')
 
 # Print the state-action-value function (Q)
 def print_Q(Q):
-   print '---- Q(s,a) ----'
+   print('---- Q(s,a) ----')
    print_state_action_value_map(Q)
 
 # Print the state-value function (V) given the Q-values
 def print_V(Q):
-   print '---- V(s) ----'
+   print('---- V(s) ----')
    for useable in [True, False]:
       if useable:
-         print 'Usable ace'
+         print('Usable ace')
       else:
-         print 'No useable ace'
-      for val in range(21,10,-1):
-         for card in range(1,11):
-            if (Q[((card,val,useable),True)] > Q[((card,val,useable),False)]):
-               print '%5.2f' % Q[((card,val,useable),True)], ' ',
+         print('No useable ace')
+      for val in range(21, 10, -1):
+         for card in range(1, 11):
+            if Q[((card, val, useable), True)] > Q[((card, val, useable), False)]:
+               print('%5.2f' % Q[((card, val, useable), True)], ' ',)
             else:
-               print '%5.2f' % Q[((card,val,useable),False)], ' ',
-         print '| %d' % val
-      print ' '
+               print('%5.2f' % Q[((card, val, useable), False)], ' ',)
+         print('| %d' % val)
+      print(' ')
 
 # Print a policy given the Q-values
 def print_policy(Q):
-   print '---- Policy ----'
+   print('---- Policy ----')
    for useable in [True, False]:
       if useable:
-         print 'Usable ace'
+         print('Usable ace')
       else:
-         print 'No useable ace'
-      for val in range(21,10,-1):
-         for card in range(1,11):
-            if (Q[((card,val,useable),True)] > Q[((card,val,useable),False)]):
-               print 'X',
+         print('No useable ace')
+      for val in range(21, 10, -1):
+         for card in range(1, 11):
+            if Q[((card, val, useable), True)] > Q[((card, val, useable), False)]:
+               print('X'),
             else:
-               print ' ',
-         print '| %d' % val
-      print ' '
+               print(' '),
+         print('| %d' % val)
+      print(' ')
 
 # Initialize Q-values so that they produce the initial policy of sticking
 # only on 20 or 21.
@@ -221,7 +221,7 @@ def initialize_Q():
    M = {}
    for state in states:
       card, val, useable = state
-      if (val < 20):
+      if val < 20:
          M[(state,False)] = -0.001
          M[(state,True)] = 0.001   # favor hitting
       else:
@@ -283,6 +283,21 @@ def q_learning(draw, n_iter, alpha, epsilon):
             break
    return Q
 
+# Main ai function interface
+def get_policy(draw):
+   n_iter_mc = 10000000
+   n_iter_q  = 10000000
+   n_games = 100000
+   alpha = 1
+   epsilon = 0.1
+   print('Q-LEARNING -- UNBIASED DECK')
+   Q = q_learning(draw_card_unbiased, n_iter_q, alpha, epsilon)
+   print_Q(Q)
+   print_V(Q)
+   print_policy(Q)
+   return Q
+
+
 # Main program
 if __name__ == '__main__':
    # set parameters
@@ -292,7 +307,7 @@ if __name__ == '__main__':
    alpha = 1
    epsilon = 0.1
    # run learning algorithms
-   print 'Q-LEARNING -- UNBIASED DECK'
+   print('Q-LEARNING -- UNBIASED DECK')
    Q = q_learning(draw_card_unbiased, n_iter_q, alpha, epsilon)
    print_Q(Q)
    print_V(Q)
