@@ -373,7 +373,7 @@ def mainGame():
         """ Button for ai to deal with the game, it will help the player to determine hit or stand during the game"""
         def __init__(self):
             pygame.sprite.Sprite.__init__(self)
-            self.image, self.rect = imageLoad("double1.png", 0)
+            self.image, self.rect = imageLoad("ai.png", 0)
             self.position = (735, 435)
             # create a self policy, make it as a interface later
             self.policy = {}
@@ -394,9 +394,9 @@ def mainGame():
             triggered to handle the hit or action according to the policy table"""
 
             if roundEnd == 0:
-                self.image, self.rect = imageLoad("double1.png", 0)
+                self.image, self.rect = imageLoad("ai.png", 0)
             else:
-                self.image, self.rect = imageLoad("double-grey1.png", 0)
+                self.image, self.rect = imageLoad("ai-grey.png", 0)
 
             self.position = (735, 435)
             self.rect.center = self.position
