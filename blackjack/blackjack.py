@@ -18,7 +18,7 @@ clock = pygame.time.Clock()
 def mainGame():
     """ Function that contains all the game logic. """
     
-    def gameOver():
+    def gameOver(funds):
         """ Displays a game over screen in its own little loop. It is called when it has been determined that the player's funds have
         run out. All the player can do from this screen is exit the game."""
         
@@ -34,7 +34,10 @@ def mainGame():
             
             # Render "Game Over" sentence on the screen
             oFont = pygame.font.Font(None, 50)
-            displayFont = pygame.font.Font.render(oFont, "Game over! You're outta cash!", 1, (255, 255, 255), (0, 0, 0))
+            if funds <= 0:
+                displayFont = pygame.font.Font.render(oFont, "Game over! You lose!", 1, (255, 255, 255), (0, 0, 0))
+            elif funds >= 200:
+                displayFont = pygame.font.Font.render(oFont, "Game over! You win", 1, (255, 255, 255), (0, 0, 0))
             screen.blit(displayFont, (125, 220))
             
             # Update the display
@@ -213,8 +216,8 @@ def mainGame():
         
         textFont = pygame.font.Font(None, 28)
         
-        if funds <= 0:
-            gameOver()  
+        if funds <= 0 or funds >= 200:
+            gameOver(funds)
         
         roundEnd = 1
 
