@@ -5,12 +5,13 @@ from ai import *
 from settings import *
 import pygame
 from pygame.locals import *
+from utils import *
 
 # init the pygame state
 pygame.font.init()
 pygame.mixer.init()
 
-screen = pygame.display.set_mode((800, 500))
+screen = pygame.display.set_mode((800, 540))
 clock = pygame.time.Clock()
 
 # main game function begins
@@ -56,29 +57,12 @@ def mainGame():
             # deck[k], deck[n] = deck[n], deck[k]
             n -= 1
 
-        return deck        
-                        
-    def createDeck():
-        """ Creates a default deck which contains all 52 cards and returns it. """
-
-        deck = ['sj', 'sq', 'sk', 'sa', 'hj', 'hq', 'hk', 'ha', 'cj', 'cq', 'ck', 'ca', 'dj', 'dq', 'dk', 'da']
-        values = range(2, 11)
-        for x in values:
-            spades = "s" + str(x)
-            hearts = "h" + str(x)
-            clubs = "c" + str(x)
-            diamonds = "d" + str(x)
-            deck.append(spades)
-            deck.append(hearts)
-            deck.append(clubs)
-            deck.append(diamonds)
-
         return deck
 
     def returnFromDead(deck, deadDeck):
         """ Appends the cards from the deadDeck to the deck that is in play. This is called when the main deck
         has been emptied. """
-        
+
         for card in deadDeck:
             deck.append(card)
 
@@ -86,7 +70,7 @@ def mainGame():
         deck = shuffle(deck)
 
         return deck, deadDeck
-        
+
     def deckDeal(deck, deadDeck):
         """ Shuffles the deck, takes the top 4 cards off the deck, appends them to the player's and dealer's hands, and
         returns the player's and dealer's hands. """
@@ -276,7 +260,6 @@ def mainGame():
         return deck, deadDeck, roundEnd, funds, displayFont
     ######## DECK FUNCTIONS END ########  
 
-
     ######## SPRITE FUNCTIONS BEGIN ##########
     class cardSprite(pygame.sprite.Sprite):
         """ Sprite that displays a specific card. """
@@ -386,6 +369,71 @@ def mainGame():
 
             return deck, deadDeck, roundEnd, funds, playerHand, deadDeck, pCardPos, displayFont, bet
 
+    class aiButton(pygame.sprite.Sprite):
+        """ Button for ai to deal with the game, it will help the player to determine hit or stand during the game"""
+        def __init__(self):
+            pygame.sprite.Sprite.__init__(self)
+            self.image, self.rect = imageLoad("double1.png", 0)
+            self.position = (735, 435)
+            # create a self policy, make it as a interface later
+            self.policy = {}
+            for i in range(2, 12):
+                for j in range(2, 18):
+                    item = (i, j)
+                    self.policy.setdefault(item, True)
+            for i in range(2, 12):
+                for j in range(18, 22):
+                    item = (i, j)
+                    self.policy.setdefault(item, False)
+            self.policy[(2, 18)] = True
+            self.policy[(10, 18)] = True
+            self.policy[(11, 18)] = True
+
+        def update(self, mX, mY, deck, deadDeck, roundEnd, cardSprite, playerCards ,cards, playerHand, dealerHand, pCardPos, funds, bet, displayFont):
+            """If the mouse position is on the ai button, and the mouse is clicking and roundEnd is 0, then ai will be
+            triggered to handle the hit or action according to the policy table"""
+
+            if roundEnd == 0:
+                self.image, self.rect = imageLoad("double1.png", 0)
+            else:
+                self.image, self.rect = imageLoad("double-grey1.png", 0)
+
+            self.position = (735, 435)
+            self.rect.center = self.position
+
+            if self.rect.collidepoint(mX, mY) == 1:
+                if roundEnd == 0:
+                    playClick()
+                    # check the current player hand and dealer hand
+                    # according to the policy table to find the action
+                    playerVal = checkValue(playerHand)
+                    dealerVal = checkValue(dealerHand[0:1])
+                    print("---start----")
+                    print("player" + str(playerVal))
+                    print("total dealer" + str(checkValue(dealerHand)))
+                    print("current dealer" + str(dealerVal))
+                    print("---end----")
+
+                    click = 0
+
+                    # hit
+                    while playerVal <= 21 and self.policy[(dealerVal, playerVal)]:
+                        deck, deadDeck, playerHand = hit(deck, deadDeck, playerHand)
+                        currentCard = len(playerHand) - 1
+                        card = cardSprite(playerHand[currentCard], pCardPos)
+                        playerCards.add(card)
+                        pCardPos = (pCardPos[0] - 80, pCardPos[1])
+                        playerVal = checkValue(playerHand)
+                        print("updated player" + str(playerVal))
+
+                    # stand
+                    if playerVal <= 21 and self.policy[(dealerVal, playerVal)] is False:
+                        deck, deadDeck, roundEnd, funds, displayFont = compareHands(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite)
+
+
+            return deck, deadDeck, roundEnd, playerHand, pCardPos, funds, bet, displayFont
+
+
     class dealButton(pygame.sprite.Sprite):
         """ A button on the right hand side of the screen that can be clicked at the end of a round to deal a
         new hand of cards and continue the game. """
@@ -393,7 +441,7 @@ def mainGame():
         def __init__(self):
             pygame.sprite.Sprite.__init__(self)
             self.image, self.rect = imageLoad("deal.png", 0)
-            self.position = (735, 450)
+            self.position = (735, 485)
 
         def update(self, mX, mY, deck, deadDeck, roundEnd, cardSprite, cards, playerHand, dealerHand, dCardPos, pCardPos, displayFont, playerCards, click, handsPlayed):
             """ If the mouse position collides with the button, and the mouse is clicking, and roundEnd does not = 0,
@@ -410,7 +458,7 @@ def mainGame():
             else:
                 self.image, self.rect = imageLoad("deal-grey.png", 0)
             
-            self.position = (735, 450)
+            self.position = (735, 485)
             self.rect.center = self.position
             
                 
@@ -445,7 +493,6 @@ def mainGame():
                     handsPlayed += 1
                     
             return deck, deadDeck, playerHand, dealerHand, dCardPos, pCardPos, roundEnd, displayFont, click, handsPlayed
-            
             
     class betButtonUp(pygame.sprite.Sprite):
         """ Button that allows player to increase his bet (in between hands only). """
@@ -511,7 +558,6 @@ def mainGame():
             return bet, click
     ###### SPRITE FUNCTIONS END ######
 
-         
     ###### INITIALIZATION BEGINS ######
     # This font is used to display text on the right-hand side of the screen
     textFont = pygame.font.Font(None, 28)
@@ -531,9 +577,10 @@ def mainGame():
     dealButton = dealButton()
     hitButton = hitButton()
     doubleButton = doubleButton()
+    aiButton = aiButton()
     
     # This group contains the button sprites
-    buttons = pygame.sprite.Group(bbU, bbD, hitButton, standButton, dealButton, doubleButton)
+    buttons = pygame.sprite.Group(bbU, bbD, hitButton, standButton, dealButton, doubleButton, aiButton)
 
     # The 52 card deck is created
     deck = createDeck()
@@ -574,7 +621,11 @@ def mainGame():
         if roundEnd == 1 and firstTime == 1:
             displayFont = display(textFont, "Click on the arrows to declare your bet, then deal to start the game.")
             firstTime = 0
-            
+
+        # When a new round start, put the card in the dead deck into the original deck
+        if roundEnd == 1:
+            returnFromDead(deck, deadDeck)
+
         # Show the blurb at the bottom of the screen, how much money left, and current bet    
         screen.blit(displayFont, (10, 444))
         fundsFont = pygame.font.Font.render(textFont, "Funds: $%.2f" % funds, 1, (255, 255, 255), (0, 0, 0))
@@ -600,29 +651,45 @@ def mainGame():
         if roundEnd == 0:
             # Stuff to do when the game is happening 
             playerValue = checkValue(playerHand)
+            # print(playerValue)
             dealerValue = checkValue(dealerHand)
-    
+            # print(dealerValue)
+
             if playerValue == 21 and len(playerHand) == 2:
                 # If the player gets blackjack
-                displayFont, playerHand, dealerHand, deadDeck, funds, roundEnd = blackJack(deck, deadDeck, playerHand, dealerHand, funds,  bet, cards, cardSprite)
+                displayFont, playerHand, dealerHand, deadDeck, funds, roundEnd = \
+                    blackJack(deck, deadDeck, playerHand, dealerHand, funds,  bet, cards, cardSprite)
                 
             if dealerValue == 21 and len(dealerHand) == 2:
                 # If the dealer has blackjack
-                displayFont, playerHand, dealerHand, deadDeck, funds, roundEnd = blackJack(deck, deadDeck, playerHand, dealerHand, funds,  bet, cards, cardSprite)
+                displayFont, playerHand, dealerHand, deadDeck, funds, roundEnd = \
+                    blackJack(deck, deadDeck, playerHand, dealerHand, funds,  bet, cards, cardSprite)
 
             if playerValue > 21:
                 # If player busts
-                deck, playerHand, dealerHand, deadDeck, funds, roundEnd, displayFont = bust(deck, playerHand, dealerHand, deadDeck, funds, 0, bet, cards, cardSprite)
+                deck, playerHand, dealerHand, deadDeck, funds, roundEnd, displayFont = \
+                    bust(deck, playerHand, dealerHand, deadDeck, funds, 0, bet, cards, cardSprite)
          
         # Update the buttons 
         # deal 
-        deck, deadDeck, playerHand, dealerHand, dCardPos, pCardPos, roundEnd, displayFont, click, handsPlayed = dealButton.update(mX, mY, deck, deadDeck, roundEnd, cardSprite, cards, playerHand, dealerHand, dCardPos, pCardPos, displayFont, playerCards, click, handsPlayed)   
-        # hit    
-        deck, deadDeck, playerHand, pCardPos, click = hitButton.update(mX, mY, deck, deadDeck, playerHand, playerCards, pCardPos, roundEnd, cardSprite, click)
+        deck, deadDeck, playerHand, dealerHand, dCardPos, pCardPos, roundEnd, displayFont, click, handsPlayed = \
+            dealButton.update(mX, mY, deck, deadDeck, roundEnd, cardSprite, cards, playerHand, dealerHand, dCardPos,
+                              pCardPos, displayFont, playerCards, click, handsPlayed)
+        # ai
+        deck, deadDeck, roundEnd, playerHand, pCardPos, funds, bet, displayFont = \
+            aiButton.update(mX, mY, deck, deadDeck, roundEnd, cardSprite, playerCards, cards, playerHand, dealerHand,
+                            pCardPos,funds, bet, displayFont)
+        # hit
+        deck, deadDeck, playerHand, pCardPos, click = \
+            hitButton.update(mX, mY, deck, deadDeck, playerHand, playerCards, pCardPos, roundEnd, cardSprite, click)
         # stand    
-        deck, deadDeck, roundEnd, funds, playerHand, deadDeck, pCardPos,  displayFont = standButton.update(mX, mY,   deck, deadDeck, playerHand, dealerHand, cards, pCardPos, roundEnd, cardSprite, funds, bet, displayFont)
+        deck, deadDeck, roundEnd, funds, playerHand, deadDeck, pCardPos,  displayFont = \
+            standButton.update(mX, mY, deck, deadDeck, playerHand, dealerHand, cards, pCardPos, roundEnd, cardSprite,
+                               funds, bet, displayFont)
         # double
-        deck, deadDeck, roundEnd, funds, playerHand, deadDeck, pCardPos, displayFont, bet = doubleButton.update(mX, mY, deck, deadDeck, playerHand, dealerHand, playerCards, cards, pCardPos, roundEnd, cardSprite, funds, bet, displayFont)
+        deck, deadDeck, roundEnd, funds, playerHand, deadDeck, pCardPos, displayFont, bet = \
+            doubleButton.update(mX, mY, deck, deadDeck, playerHand, dealerHand, playerCards, cards, pCardPos, roundEnd,
+                                cardSprite, funds, bet, displayFont)
         # Bet buttons
         bet, click = bbU.update(mX, mY, bet, funds, click, roundEnd)
         bet, click = bbD.update(mX, mY, bet, click, roundEnd)
