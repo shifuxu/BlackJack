@@ -379,6 +379,7 @@ def mainGame():
             self.image, self.rect = imageLoad("ai.png", 0)
             self.position = (735, 435)
             # create a self policy, make it as a interface later
+            # add another variable as policy and pass it to self.policy
             self.policy = {}
             for i in range(2, 12):
                 for j in range(2, 18):
