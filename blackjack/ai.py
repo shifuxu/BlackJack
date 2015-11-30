@@ -24,7 +24,7 @@ def hand_has_useable_ace(hand):
 def hand_value(hand):
    total, ace = hand
    if (hand_has_useable_ace(hand)):
-      return (total + 10)
+      return total + 10
    else:
       return total
 
@@ -33,7 +33,7 @@ def hand_value(hand):
 def hand_add_card(hand, card):
    total, ace = hand
    total = total + card
-   if (card == 1):
+   if card == 1:
       ace = True
    return (total, ace)
 
@@ -56,12 +56,16 @@ def game_reward(player_hand, dealer_hand):
 # Draw a card from an unbiased deck.
 # Return the face value of the card (1 to 10).
 
-#?????? problem the way we draw the card is limited, change????????
-def draw_card_unbiased():
-   card = random.randint(1,13)
-   if (card > 10):
-      card = 10
-   return card
+def draw_card_unbiased(deck, deadDeck):
+   card = deck[0][1:]
+   deadDeck.append(card)
+   if card == 'a':
+      cardVal = 1
+   elif card == 'j' or card == 'q' or card == 'k':
+      cardVal = 10
+   else:
+      cardVal = int(card)
+   return cardVal
 
 # Deal a player hand given the function to draw cards.
 # Return only the hand.
@@ -84,7 +88,7 @@ def deal_dealer_hand(draw):
 # Play the dealer hand using the fixed strategy for the dealer.
 # Return the resulting dealer hand.
 def play_dealer_hand(hand, draw):
-   while (hand_value(hand) < 17):
+   while hand_value(hand) < 17:
       hand = hand_add_card(hand, draw())
    return hand
 
@@ -98,18 +102,18 @@ def play_dealer_hand(hand, draw):
 # Select a state at random.
 def select_random_state(all_states):
    n = len(all_states)
-   r = random.randint(0,n-1)
+   r = random.randint(0, n-1)
    state = all_states[r]
    return state
 
 # Select an action at random
 def select_random_action():
-   r = random.randint(1,2)
-   return (r == 1)
+   r = random.randint(1, 2)
+   return r == 1
 
 # Select the best action using current Q-values.
 def select_best_action(Q, state):
-   if (Q[(state,True)] > Q[(state,False)]):
+   if Q[(state, True)] > Q[(state, False)]:
       return True
    else:
       return False
@@ -117,7 +121,7 @@ def select_best_action(Q, state):
 # Select an action according to the epsilon-greedy policy
 def select_e_greedy_action(Q, state, epsilon):
    r = random.random()
-   if (r < epsilon):
+   if r < epsilon:
       return select_random_action()
    else:
       return select_best_action(Q, state)
@@ -125,7 +129,7 @@ def select_e_greedy_action(Q, state, epsilon):
 # Given the state, return player and dealer hand consistent with it.
 def hands_from_state(state):
    card, val, useable = state
-   if (useable):
+   if useable:
       val = val - 10
    player_hand = (val, useable)
    dealer_hand = empty_hand()
@@ -141,8 +145,8 @@ def state_from_hands(card, player_hand):
 # Return a list of the possible states.
 def state_list():
    states = []
-   for card in range(1,11):
-      for val in range(11,22):
+   for card in range(1, 11):
+      for val in range(11, 22):
          states.append((card, val, False))
          states.append((card, val, True))
    return states
@@ -152,8 +156,8 @@ def initialize_state_action_value_map():
    states = state_list()
    M = {}
    for state in states:
-      M[(state,False)] = 0.0
-      M[(state,True)] = 0.0
+      M[(state, False)] = 0.0
+      M[(state, True)] = 0.0
    return M
 
 # Print a (state, action) -> value map
@@ -222,11 +226,11 @@ def initialize_Q():
    for state in states:
       card, val, useable = state
       if val < 20:
-         M[(state,False)] = -0.001
-         M[(state,True)] = 0.001   # favor hitting
+         M[(state, False)] = -0.001
+         M[(state, True)] = 0.001   # favor hitting
       else:
-         M[(state,False)] = 0.001  # favor sticking
-         M[(state,True)] = -0.001
+         M[(state, False)] = 0.001  # favor sticking
+         M[(state, True)] = -0.001
    return M
 
 # Initialize number of times each (state,action) pair has been observed.
@@ -245,19 +249,19 @@ def q_learning(draw, n_iter, alpha, epsilon):
    # get list of all states
    all_states = state_list()
    # iterate
-   for n in range(0,n_iter):
+   for n in range(0, n_iter):
       # initialize state
       state = select_random_state(all_states)
       dealer_card, dealer_hand, player_hand = hands_from_state(state)
       # choose actions, update Q
-      while (True):
+      while True:
          action = select_e_greedy_action(Q, state, epsilon)
          sa = (state, action)
-         if (action):
+         if action:
             # draw a card, update state
-            player_hand = hand_add_card(player_hand, draw())
+            player_hand = hand_add_card(player_hand, draw)
             # check if busted
-            if (hand_value(player_hand) > 21):
+            if hand_value(player_hand) > 21:
                # update Q-value
                count[sa] = count[sa] + 1.0
                Q[sa] = Q[sa] + alpha/count[sa] * ((-1.0) - Q[sa])
@@ -265,9 +269,9 @@ def q_learning(draw, n_iter, alpha, epsilon):
             else:
                # update Q-value
                s_next = state_from_hands(dealer_card, player_hand)
-               q_best = Q[(s_next,False)]
-               if (Q[(s_next,True)] > q_best):
-                  q_best = Q[(s_next,True)]
+               q_best = Q[(s_next, False)]
+               if Q[(s_next, True)] > q_best:
+                  q_best = Q[(s_next, True)]
                count[sa] = count[sa] + 1.0
                Q[sa] = Q[sa] + alpha/count[sa] * (q_best - Q[sa])
                # update state
@@ -284,14 +288,14 @@ def q_learning(draw, n_iter, alpha, epsilon):
    return Q
 
 # Main ai function interface
-def get_policy(draw):
+def get_policy(deadDeck, playerHand, dealerHand):
    n_iter_mc = 10000000
    n_iter_q  = 10000000
    n_games = 100000
    alpha = 1
    epsilon = 0.1
    print('Q-LEARNING -- UNBIASED DECK')
-   Q = q_learning(draw_card_unbiased, n_iter_q, alpha, epsilon)
+   Q = q_learning(draw_card_unbiased(deck, deadDeck), n_iter_q, alpha, epsilon)
    print_Q(Q)
    print_V(Q)
    print_policy(Q)
