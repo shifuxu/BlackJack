@@ -11,7 +11,7 @@ from utils import *
 pygame.font.init()
 pygame.mixer.init()
 
-screen = pygame.display.set_mode((800, 540))
+screen = pygame.display.set_mode((820, 540))
 clock = pygame.time.Clock()
 
 # main game function begins
