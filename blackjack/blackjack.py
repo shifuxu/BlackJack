@@ -392,8 +392,6 @@ def mainGame():
                     print("current dealer" + str(dealerVal))
                     print("---end----")
 
-                    click = 0
-
                     # hit
                     while playerVal <= 21 and get_best_action_by_hands(self.policy, playerHand, dealerVal):
                         deck, deadDeck, playerHand = hit(deck, deadDeck, playerHand)
