@@ -44,36 +44,6 @@ def mainGame():
             pygame.display.flip()
             
     ######## DECK FUNCTIONS BEGIN ########
-    def shuffle(deck):
-        """ Shuffles the deck using an implementation of the Fisher-Yates shuffling algorithm. n is equal to the length of the
-        deck - 1 (because accessing lists starts at 0 instead of 1). While n is greater than 0, a random number k between 0
-        and n is generated, and the card in the deck that is represented by the offset n is swapped with the card in the deck
-        represented by the offset k. n is then decreased by 1, and the loop continues. """
-
-        # ??? do we have better shuffle alg
-        n = len(deck) - 1
-        while n > 0:
-            k = random.randint(0, n)
-            temp = deck[k]
-            deck[k] = deck[n]
-            deck[n] = temp
-            # deck[k], deck[n] = deck[n], deck[k]
-            n -= 1
-
-        return deck
-
-    def returnFromDead(deck, deadDeck):
-        """ Appends the cards from the deadDeck to the deck that is in play. This is called when the main deck
-        has been emptied. """
-
-        for card in deadDeck:
-            deck.append(card)
-
-        del deadDeck[:]
-        deck = shuffle(deck)
-
-        return deck, deadDeck
-
     def deckDeal(deck, deadDeck):
         """ Shuffles the deck, takes the top 4 cards off the deck, appends them to the player's and dealer's hands, and
         returns the player's and dealer's hands. """
@@ -378,6 +348,7 @@ def mainGame():
             pygame.sprite.Sprite.__init__(self)
             self.image, self.rect = imageLoad("ai.png", 0)
             self.position = (735, 435)
+            """
             # create a self policy, make it as a interface later
             # add another variable as policy and pass it to self.policy
             self.policy = {}
@@ -392,6 +363,8 @@ def mainGame():
             self.policy[(2, 18)] = True
             self.policy[(10, 18)] = True
             self.policy[(11, 18)] = True
+            """
+            self.policy = {}
 
         def update(self, mX, mY, deck, deadDeck, roundEnd, cardSprite, playerCards ,cards, playerHand, dealerHand, pCardPos, funds, bet, displayFont):
             """If the mouse position is on the ai button, and the mouse is clicking and roundEnd is 0, then ai will be
@@ -407,6 +380,7 @@ def mainGame():
 
             if self.rect.collidepoint(mX, mY) == 1:
                 if roundEnd == 0:
+                    self.policy = get_policy(deck, deadDeck, playerHand, dealerHand[0:1])
                     playClick()
                     # check the current player hand and dealer hand
                     # according to the policy table to find the action
@@ -421,7 +395,7 @@ def mainGame():
                     click = 0
 
                     # hit
-                    while playerVal <= 21 and self.policy[(dealerVal, playerVal)]:
+                    while playerVal <= 21 and get_best_action_by_hands(self.policy, playerHand, dealerVal):
                         deck, deadDeck, playerHand = hit(deck, deadDeck, playerHand)
                         currentCard = len(playerHand) - 1
                         card = cardSprite(playerHand[currentCard], pCardPos)
@@ -431,7 +405,7 @@ def mainGame():
                         print("updated player" + str(playerVal))
 
                     # stand
-                    if playerVal <= 21 and self.policy[(dealerVal, playerVal)] is False:
+                    if playerVal <= 21 and get_best_action_by_hands(self.policy, playerHand, dealerVal) is False:
                         deck, deadDeck, roundEnd, funds, displayFont = compareHands(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite)
 
 
@@ -495,6 +469,8 @@ def mainGame():
                     roundEnd = 0
                     click = 0
                     handsPlayed += 1
+
+
                     
             return deck, deadDeck, playerHand, dealerHand, dCardPos, pCardPos, roundEnd, displayFont, click, handsPlayed
             
