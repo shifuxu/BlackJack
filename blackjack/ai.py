@@ -30,28 +30,18 @@ def getAllPossibleStates():
 	return allStates
 
 def initializeQMap():
+	
 	allStates = getAllPossibleStates()
 	qMap = {}
 
 	for state in allStates:
-		if state[1] < 17:
-			qMap[(state, True)] = 0.01
-			qMap[(state, False)] = -0.01
-		else:
-			qMap[(state, True)] = -0.01
-			qMap[(state, False)] = 0.01
+		qMap[(state, True)] = 0.0
+		qMap[(state, False)] = 0.0
 
 	return qMap
 
 def initializeCounterMap():
-	allStates = getAllPossibleStates()
-	counterMap = {}
-
-	for state in allStates:
-		counterMap[(state, True)] = 0.0
-		counterMap[(state, False)] = 0.0
-
-	return counterMap
+	return initializeQMap()
 
 def getHandsFromState(state):
 	dealerCard, playerTotal, hasUseableAce = state
@@ -159,33 +149,32 @@ def q_learning(learningTimes, alpha, discount, epsilon):
 
 		while True:
 			action = getActionWithEpsilon(qMap, state, epsilon)
-			StateActionPair = (state, action)
-			counterMap[StateActionPair] = counterMap[StateActionPair] + 1.0
+			stateActionPair = (state, action)
+			counterMap[stateActionPair] = counterMap[stateActionPair] + 1.0
 			# Player hits
 			if action:
-				newCard = drawCard()
-				playerHand = addCardToHand(newCard, playerHand)
+				playerHand = addCardToHand(drawCard(), playerHand)
 				# Player does not bust
 				if getHandTotal(playerHand) <= 21:
 					# Update qMap
 					nextState = getNextState(dealerCard, playerHand)
 					maxQ = getMaxQByState(qMap, nextState)
-					diff = (discount * maxQ) - qMap[StateActionPair]
-					qMap[StateActionPair] = qMap[StateActionPair] + (alpha / counterMap[StateActionPair] * diff)
+					diff = (discount * maxQ) - qMap[stateActionPair]
+					qMap[stateActionPair] = qMap[stateActionPair] + (alpha / counterMap[stateActionPair] * diff)
 					state = nextState
 				# Player busts
 				else:
 					# Update qMap
-					diff = (-1) - qMap[StateActionPair]
-					qMap[StateActionPair] = qMap[StateActionPair] + (alpha / counterMap[StateActionPair] * diff)
+					diff = (-1) - qMap[stateActionPair]
+					qMap[stateActionPair] = qMap[stateActionPair] + (alpha / counterMap[stateActionPair] * diff)
 					break;
 			# Player stands
 			else:
 				# Dealer play
 				dealerHand = dealerPlay(dealerHand)
 				# Update qMap
-				diff = getRewardByHands(dealerHand, playerHand) - qMap[StateActionPair]
-				qMap[StateActionPair] = qMap[StateActionPair] + (alpha / counterMap[StateActionPair] * diff)
+				diff = getRewardByHands(dealerHand, playerHand) - qMap[stateActionPair]
+				qMap[stateActionPair] = qMap[stateActionPair] + (alpha / counterMap[stateActionPair] * diff)
 				break;
 
 		#epsilon = epsilon * ((learningTimes - n) / learningTimes)
@@ -249,11 +238,11 @@ def policyHelper(Q):
 def getPolicySet():
     # set parameters
     n_iter_mc = 10000000
-    n_iter_q  = 3000000
+    n_iter_q  = 3500000
     n_games = 100000
     alpha = 1
     epsilon = 0.1
-    discount = 1
+    discount = 0.8
     # run learning algorithms
     print('Q-LEARNING -- UNBIASED DECK')
     Q = q_learning(n_iter_q, alpha, discount, epsilon)
