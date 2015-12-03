@@ -45,12 +45,11 @@ def mainGame():
             # Update the display
             pygame.display.flip()
 
-    def showProgressBar(pbar):
+    def showProgressBar(pbar, continueFlag):
         """Display the progress bar before we enter into the formal game, at the same time, the ai alg will
         run behind and get the policy when loading is finished"""
 
-        percentage = 0
-        while True:
+        while continueFlag[0]:
             for event in pygame.event.get():
                 if event.type == QUIT:
                     sys.exit()
@@ -58,11 +57,8 @@ def mainGame():
                     sys.exit()
 
             screen.fill((0, 0, 0))
-            time.sleep(0.65)
-            pbar.update(percentage)
-            percentage += 1
-            if percentage == 100:
-                break
+            time.sleep(0.7)
+            pbar.update()
             
     ######## DECK FUNCTIONS BEGIN ########
     def deckDeal(deck, deadDeck):
@@ -378,12 +374,15 @@ def mainGame():
             self.image, self.rect = imageLoad("ai.png", 0)
             self.position = (735, 435)
             self.policySet = None
+            self.continueFlag = [True]
             _thread.start_new_thread(self.setPolicy, ())
             # print(self.policySet[0])
             # print(self.policySet[1])
 
         def setPolicy(self):
             self.policySet = getPolicySet()
+            self.continueFlag.remove(True)
+            self.continueFlag.append(False)
 
         def choseAction(self, playerAceFlag, dealerVal, playerVal):
             if playerAceFlag:
@@ -575,14 +574,14 @@ def mainGame():
             self.font = pygame.font.Font(None, 64)
             self.loading = self.font.render("LOADING", True, self.color)
             self.textHeight = self.y1 - 80
+            self.percent = 0
 
-        def update(self, percent):
+        def update(self):
             screen.fill((0, 0, 0))
             screen.blit(self.loading, (300, self.textHeight))
-            txtpercent = self.font.render(str(percent)+"%", True, self.color)
-            screen.blit(txtpercent, (20, self.y1+30))
             pygame.draw.rect(screen, self.color, (20, self.y1, self.max_width, 20), 2)
-            pygame.draw.rect(screen, self.color, (20, self.y1, (percent*self.max_width)/100, 20), 0)
+            self.percent += 1
+            pygame.draw.rect(screen, self.color, (20, self.y1, (self.percent*self.max_width)/100, 20), 0)
             pygame.display.flip()
 
             (r, g, b) = self.color
@@ -645,7 +644,7 @@ def mainGame():
     # message at the bottom, then it is set to zero for the duration of the program.
     firstTime = 1
 
-    showProgressBar(pbar)
+    showProgressBar(pbar, aiButton.continueFlag)
     ###### INITILIZATION ENDS ########
     
     ###### MAIN GAME LOOP BEGINS #######
