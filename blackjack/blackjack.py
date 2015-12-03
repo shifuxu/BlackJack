@@ -58,7 +58,7 @@ def mainGame():
                     sys.exit()
 
             screen.fill((0, 0, 0))
-            time.sleep(0.8)
+            time.sleep(0.65)
             pbar.update(percentage)
             percentage += 1
             if percentage == 100:
