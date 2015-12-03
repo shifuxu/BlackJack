@@ -35,13 +35,24 @@ def initializeQMap():
 	qMap = {}
 
 	for state in allStates:
-		qMap[(state, True)] = 0.0
-		qMap[(state, False)] = 0.0
+		if state[1] < 10:
+			qMap[(state, True)] = 0.1
+			qMap[(state, False)] = -0.1
+		else:
+			qMap[(state, True)] = 0.0
+			qMap[(state, False)] = 0.0
 
 	return qMap
 
 def initializeCounterMap():
-	return initializeQMap()
+	allStates = getAllPossibleStates()
+	counterMap = {}
+
+	for state in allStates:
+		counterMap[(state, True)] = 0.0
+		counterMap[(state, False)] = 0.0
+
+	return counterMap
 
 def getHandsFromState(state):
 	dealerCard, playerTotal, hasUseableAce = state
@@ -237,12 +248,10 @@ def policyHelper(Q):
 
 def getPolicySet():
     # set parameters
-    n_iter_mc = 10000000
     n_iter_q  = 3500000
-    n_games = 100000
     alpha = 1
     epsilon = 0.1
-    discount = 0.8
+    discount = 1
     # run learning algorithms
     print('Q-LEARNING -- UNBIASED DECK')
     Q = q_learning(n_iter_q, alpha, discount, epsilon)
