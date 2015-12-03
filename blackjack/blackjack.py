@@ -6,6 +6,8 @@ from settings import *
 import pygame
 from pygame.locals import *
 from utils import *
+import _thread
+import time
 
 # init the pygame state
 pygame.font.init()
@@ -42,6 +44,25 @@ def mainGame():
             
             # Update the display
             pygame.display.flip()
+
+    def showProgressBar(pbar):
+        """Display the progress bar before we enter into the formal game, at the same time, the ai alg will
+        run behind and get the policy when loading is finished"""
+
+        percentage = 0
+        while True:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    sys.exit()
+                elif event.type == KEYDOWN and event.key == K_ESCAPE:
+                    sys.exit()
+
+            screen.fill((0, 0, 0))
+            time.sleep(0.8)
+            pbar.update(percentage)
+            percentage += 1
+            if percentage == 100:
+                break
             
     ######## DECK FUNCTIONS BEGIN ########
     def deckDeal(deck, deadDeck):
@@ -88,6 +109,8 @@ def mainGame():
         """ Checks the value of the cards in the player's or dealer's hand. """
 
         totalValue = 0
+        aceCount = 0
+        aceFlag = True
 
         for card in hand:
             value = card[1:]
@@ -97,6 +120,7 @@ def mainGame():
                 value = 10
             elif value == 'a':
                 value = 11
+                aceCount += 1
             else:
                 value = int(value)
 
@@ -111,21 +135,26 @@ def mainGame():
                 # to change the value of the second ace, so the loop breaks. 
                 if card[1] == 'a':
                     totalValue -= 10
+                    aceCount -= 1
 
                 if totalValue <= 21:
+                    if aceCount == 0:
+                        aceFlag = False
+                    else:
+                        aceFlag = True
                     break
                 else:
                     continue
 
-        return totalValue
+        return totalValue, aceFlag
         
     def blackJack(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite):
         """ Called when the player or the dealer is determined to have blackjack. Hands are compared to determine the outcome. """
 
         textFont = pygame.font.Font(None, 28)
 
-        playerValue = checkValue(playerHand)
-        dealerValue = checkValue(dealerHand)
+        playerValue, playerAceFlag = checkValue(playerHand)
+        dealerValue, dealerAceFlag = checkValue(dealerHand)
         
         if playerValue == 21 and dealerValue == 21:
             # The opposing player ties the original blackjack getter because he also has blackjack
@@ -200,15 +229,15 @@ def mainGame():
 
         textFont = pygame.font.Font(None, 28)
 
-        dealerValue = checkValue(dealerHand)
-        playerValue = checkValue(playerHand)
+        dealerValue, dealerAceFlag = checkValue(dealerHand)
+        playerValue, playerAceFlag = checkValue(playerHand)
             
         # Dealer hits until he has 17 or over        
         while True:
             if dealerValue < 17:
                 # dealer hits when he has less than 17, and stands if he has 17 or above
                 deck, deadDeck, dealerHand = hit(deck, deadDeck, dealerHand)
-                dealerValue = checkValue(dealerHand)
+                dealerValue, dealerAceFlag = checkValue(dealerHand)
             else:   
                 # dealer stands
                 break
@@ -348,23 +377,19 @@ def mainGame():
             pygame.sprite.Sprite.__init__(self)
             self.image, self.rect = imageLoad("ai.png", 0)
             self.position = (735, 435)
-            """
-            # create a self policy, make it as a interface later
-            # add another variable as policy and pass it to self.policy
-            self.policy = {}
-            for i in range(2, 12):
-                for j in range(2, 18):
-                    item = (i, j)
-                    self.policy.setdefault(item, True)
-            for i in range(2, 12):
-                for j in range(18, 22):
-                    item = (i, j)
-                    self.policy.setdefault(item, False)
-            self.policy[(2, 18)] = True
-            self.policy[(10, 18)] = True
-            self.policy[(11, 18)] = True
-            """
-            self.policy = {}
+            self.policySet = None
+            _thread.start_new_thread(self.setPolicy, ())
+            # print(self.policySet[0])
+            # print(self.policySet[1])
+
+        def setPolicy(self):
+            self.policySet = getPolicySet()
+
+        def choseAction(self, playerAceFlag, dealerVal, playerVal):
+            if playerAceFlag:
+                return self.policySet[0][(dealerVal, playerVal)]
+            else:
+                return self.policySet[1][(dealerVal, playerVal)]
 
         def update(self, mX, mY, deck, deadDeck, roundEnd, cardSprite, playerCards ,cards, playerHand, dealerHand, pCardPos, funds, bet, displayFont):
             """If the mouse position is on the ai button, and the mouse is clicking and roundEnd is 0, then ai will be
@@ -380,30 +405,36 @@ def mainGame():
 
             if self.rect.collidepoint(mX, mY) == 1:
                 if roundEnd == 0:
-                    self.policy = get_policy(deck, deadDeck, playerHand, dealerHand[0:1])
                     playClick()
                     # check the current player hand and dealer hand
                     # according to the policy table to find the action
-                    playerVal = checkValue(playerHand)
-                    dealerVal = checkValue(dealerHand[0:1])
+                    playerVal, playerAceFlag = checkValue(playerHand)
+                    dealerVal, dealerAceFlag = checkValue(dealerHand[0:1])
+                    if dealerVal == 11:
+                        dealerVal -= 10
+
                     print("---start----")
                     print("player" + str(playerVal))
-                    print("total dealer" + str(checkValue(dealerHand)))
+                    print(playerAceFlag)
+                    # print("total dealer" + str(checkValue(dealerHand)))
                     print("current dealer" + str(dealerVal))
                     print("---end----")
 
                     # hit
-                    while playerVal <= 21 and get_best_action_by_hands(self.policy, playerHand, dealerVal):
+                    while playerVal <= 21 and self.choseAction(playerAceFlag, dealerVal, playerVal):
                         deck, deadDeck, playerHand = hit(deck, deadDeck, playerHand)
                         currentCard = len(playerHand) - 1
                         card = cardSprite(playerHand[currentCard], pCardPos)
                         playerCards.add(card)
                         pCardPos = (pCardPos[0] - 80, pCardPos[1])
-                        playerVal = checkValue(playerHand)
+                        playerVal, playerAceFlag = checkValue(playerHand)
+                        print("---")
+                        print(playerAceFlag)
                         print("updated player" + str(playerVal))
+                        print("---")
 
                     # stand
-                    if playerVal <= 21 and get_best_action_by_hands(self.policy, playerHand, dealerVal) is False:
+                    if playerVal <= 21 and self.choseAction(playerAceFlag, dealerVal, playerVal) is False:
                         deck, deadDeck, roundEnd, funds, displayFont = compareHands(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite)
 
 
@@ -534,6 +565,33 @@ def mainGame():
                 click = 0
             
             return bet, click
+
+    class progressBar():
+        def __init__(self):
+            self.color = (102, 170, 255)
+            self.y1 = screen.get_height()/2
+            self.y2 = self.y1 + 20
+            self.max_width = 800 - 40
+            self.font = pygame.font.Font(None, 64)
+            self.loading = self.font.render("LOADING", True, self.color)
+            self.textHeight = self.y1 - 80
+
+        def update(self, percent):
+            screen.fill((0, 0, 0))
+            screen.blit(self.loading, (300, self.textHeight))
+            txtpercent = self.font.render(str(percent)+"%", True, self.color)
+            screen.blit(txtpercent, (20, self.y1+30))
+            pygame.draw.rect(screen, self.color, (20, self.y1, self.max_width, 20), 2)
+            pygame.draw.rect(screen, self.color, (20, self.y1, (percent*self.max_width)/100, 20), 0)
+            pygame.display.flip()
+
+            (r, g, b) = self.color
+            r = min(r + 2, 255)
+            g = max(g - 2, 0)
+            b = max(b - 2, 0)
+            self.color = (r, g, b)
+            self.loading = self.font.render("LOADING", True, self.color)
+
     ###### SPRITE FUNCTIONS END ######
 
     ###### INITIALIZATION BEGINS ######
@@ -556,6 +614,7 @@ def mainGame():
     hitButton = hitButton()
     doubleButton = doubleButton()
     aiButton = aiButton()
+    pbar = progressBar()
     
     # This group contains the button sprites
     buttons = pygame.sprite.Group(bbU, bbD, hitButton, standButton, dealButton, doubleButton, aiButton)
@@ -585,12 +644,14 @@ def mainGame():
     # firstTime is a variable that is only used once, to display the initial
     # message at the bottom, then it is set to zero for the duration of the program.
     firstTime = 1
+
+    showProgressBar(pbar)
     ###### INITILIZATION ENDS ########
     
     ###### MAIN GAME LOOP BEGINS #######
     while True:
         screen.blit(background, backgroundRect)
-        
+
         if bet > funds:
             # If you lost money, and your bet is greater than your funds, make the bet equal to the funds
             bet = funds
@@ -604,7 +665,7 @@ def mainGame():
         if roundEnd == 1:
             returnFromDead(deck, deadDeck)
 
-        # Show the blurb at the bottom of the screen, how much money left, and current bet    
+        # Show the blurb at the bottom of the screen, how much money left, and current bet
         screen.blit(displayFont, (10, 444))
         fundsFont = pygame.font.Font.render(textFont, "Funds: $%.2f" % funds, 1, (255, 255, 255), (0, 0, 0))
         screen.blit(fundsFont, (663, 205))
@@ -623,21 +684,21 @@ def mainGame():
             elif event.type == MOUSEBUTTONUP:
                 mX, mY = 0, 0
                 click = 0
-            
+
         # Initial check for the value of the player's hand, so that his hand can be displayed and it can be determined
         # if the player busts or has blackjack or not
         if roundEnd == 0:
-            # Stuff to do when the game is happening 
-            playerValue = checkValue(playerHand)
+            # Stuff to do when the game is happening
+            playerValue, playerAceFlag = checkValue(playerHand)
             # print(playerValue)
-            dealerValue = checkValue(dealerHand)
+            dealerValue, dealerAceFlag = checkValue(dealerHand)
             # print(dealerValue)
 
             if playerValue == 21 and len(playerHand) == 2:
                 # If the player gets blackjack
                 displayFont, playerHand, dealerHand, deadDeck, funds, roundEnd = \
                     blackJack(deck, deadDeck, playerHand, dealerHand, funds,  bet, cards, cardSprite)
-                
+
             if dealerValue == 21 and len(dealerHand) == 2:
                 # If the dealer has blackjack
                 displayFont, playerHand, dealerHand, deadDeck, funds, roundEnd = \
@@ -647,9 +708,9 @@ def mainGame():
                 # If player busts
                 deck, playerHand, dealerHand, deadDeck, funds, roundEnd, displayFont = \
                     bust(deck, playerHand, dealerHand, deadDeck, funds, 0, bet, cards, cardSprite)
-         
-        # Update the buttons 
-        # deal 
+
+        # Update the buttons
+        # deal
         deck, deadDeck, playerHand, dealerHand, dCardPos, pCardPos, roundEnd, displayFont, click, handsPlayed = \
             dealButton.update(mX, mY, deck, deadDeck, roundEnd, cardSprite, cards, playerHand, dealerHand, dCardPos,
                               pCardPos, displayFont, playerCards, click, handsPlayed)
@@ -660,7 +721,7 @@ def mainGame():
         # hit
         deck, deadDeck, playerHand, pCardPos, click = \
             hitButton.update(mX, mY, deck, deadDeck, playerHand, playerCards, pCardPos, roundEnd, cardSprite, click)
-        # stand    
+        # stand
         deck, deadDeck, roundEnd, funds, playerHand, deadDeck, pCardPos,  displayFont = \
             standButton.update(mX, mY, deck, deadDeck, playerHand, dealerHand, cards, pCardPos, roundEnd, cardSprite,
                                funds, bet, displayFont)
@@ -673,8 +734,8 @@ def mainGame():
         bet, click = bbD.update(mX, mY, bet, click, roundEnd)
         # draw them to the screen
         buttons.draw(screen)
-         
-        # If there are cards on the screen, draw them    
+
+        # If there are cards on the screen, draw them
         if len(cards) is not 0:
             playerCards.update()
             playerCards.draw(screen)
