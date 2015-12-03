@@ -580,7 +580,8 @@ def mainGame():
             screen.fill((0, 0, 0))
             screen.blit(self.loading, (300, self.textHeight))
             pygame.draw.rect(screen, self.color, (20, self.y1, self.max_width, 20), 2)
-            self.percent += 1
+            if self.percent < 100:
+                self.percent += 1
             pygame.draw.rect(screen, self.color, (20, self.y1, (self.percent*self.max_width)/100, 20), 0)
             pygame.display.flip()
 
