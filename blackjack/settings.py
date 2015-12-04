@@ -2,7 +2,6 @@ import os
 import pygame
 from pygame.locals import *
 
-###### SYSTEM FUNCTIONS BEGIN #######
 def imageLoad(name, card):
     """ Function for loading an image. Makes sure the game is compatible across multiple OS'es, as it
     uses the os.path.join function to get he full filename. It then tries to load the image,
@@ -36,4 +35,3 @@ def display(font, sentence):
 def playClick():
     clickSound = soundLoad("click2.wav")
     clickSound.play()
-###### SYSTEM FUNCTIONS END #######

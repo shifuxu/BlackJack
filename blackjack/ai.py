@@ -259,32 +259,3 @@ def getPolicySet():
     # print_V(Q)
     print_policy(Q)
     return policyHelper(Q)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
