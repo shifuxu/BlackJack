@@ -66,13 +66,21 @@ def getHandsFromState(state):
 
 	return dealerHand, playerHand
 
-def dealHand():
+
+def dealPlayer():
 	hand = (0, False)
 	card1 = drawCard()
 	hand = addCardToHand(card1, hand)
 	card2 = drawCard()
 	hand = addCardToHand(card2, hand)
-	return (card1, card2, hand)
+	return hand
+
+
+def dealDealer():
+	hand = (0, False)
+	card1 = drawCard()
+	hand = addCardToHand(card1, hand)
+	return (card1, hand)
 
 
 def addCardToHand(card, hand):
@@ -151,13 +159,11 @@ def q_learning(learningTimes, alpha, discount, epsilon):
 	qMap = initializeQMap()
 	counterMap = initializeCounterMap()
 	allStates = getAllPossibleStates()
-
 	for n in range(0, learningTimes):
 		# select a start state randomly 
 		state = getRandomState(allStates)
 		dealerHand, playerHand = getHandsFromState(state)
 		dealerCard = state[0]
-
 		while True:
 			action = getActionWithEpsilon(qMap, state, epsilon)
 			stateActionPair = (state, action)
@@ -189,8 +195,40 @@ def q_learning(learningTimes, alpha, discount, epsilon):
 				break;
 
 		#epsilon = epsilon * ((learningTimes - n) / learningTimes)
-
 	return qMap
+
+# Q learning.
+def q_learning_test_print_average(Q, n_times):
+	# initialize
+	qMap = Q
+	gain = 0.0
+	for n in range(0, n_times):
+		playerHand = dealPlayer()
+		dealerCard, dealerHand = dealDealer()
+		state = getNextState(dealerCard, playerHand)
+		while True:
+			action = getBestActionByQ(qMap, state)
+			stateActionPair = (state, action)
+			# Player hits
+			if action:
+				playerHand = addCardToHand(drawCard(), playerHand)
+				# Player does not bust
+				if getHandTotal(playerHand) <= 21:
+					nextState = getNextState(dealerCard, playerHand)
+					state = nextState
+				# Player busts
+				else:
+					gain = gain - 1
+					break;
+			# Player stands
+			else:
+				# Dealer play
+				dealerHand = dealerPlay(dealerHand)
+				gain = gain + getRewardByHands(dealerHand, playerHand)
+				break;
+
+		#epsilon = epsilon * ((learningTimes - n) / learningTimes)
+	print ('AverageGain: %6.3f' % (gain / n_times))
 
 
 def print_Q(Q):
@@ -248,7 +286,7 @@ def policyHelper(Q):
 
 def getPolicySet():
     # set parameters
-    n_iter_q  = 3500000
+    n_iter_q = 3500000
     alpha = 1
     epsilon = 0.1
     discount = 1
@@ -259,6 +297,22 @@ def getPolicySet():
     # print_V(Q)
     print_policy(Q)
     return policyHelper(Q)
+
+def test():
+    # set parameters
+    n_iter_q = 125
+    alpha = 1
+    epsilon = 0.2
+    discount = 1
+    n_iter = 100000
+    while (n_iter_q <= 5120000):
+    	Q = q_learning(n_iter_q, alpha, discount, epsilon)
+    	print('q_learning times %d' % n_iter_q, end = ' ')
+    	q_learning_test_print_average(Q, n_iter)
+    	n_iter_q = n_iter_q * 2
+
+if __name__ == '__main__':
+	test()
 
 
 
