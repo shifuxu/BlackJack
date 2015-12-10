@@ -2,12 +2,10 @@ import os
 import pygame
 from pygame.locals import *
 
-###### SYSTEM FUNCTIONS BEGIN #######
 def imageLoad(name, card):
     """ Function for loading an image. Makes sure the game is compatible across multiple OS'es, as it
-    uses the os.path.join function to get he full filename. It then tries to load the image,
-    and raises an exception if it can't, so the user will know specifically what's going if the image loading
-    does not work. """
+    uses the os.path.join function to get he full filename. It then tries to load the image, and raises
+    an exception if it can't, so the user will know specifically what's going if the image loading does not work. """
 
     if card == 1:
         fullname = os.path.join("images/cards/", name)
@@ -36,4 +34,3 @@ def display(font, sentence):
 def playClick():
     clickSound = soundLoad("click2.wav")
     clickSound.play()
-###### SYSTEM FUNCTIONS END #######

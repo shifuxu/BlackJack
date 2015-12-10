@@ -16,13 +16,13 @@ pygame.mixer.init()
 screen = pygame.display.set_mode((820, 540))
 clock = pygame.time.Clock()
 
-# main game function begins
+# main game function
 def mainGame():
     """ Function that contains all the game logic. """
     
     def gameOver(funds):
-        """ Displays a game over screen in its own little loop. It is called when it has been determined that the player's funds have
-        run out. All the player can do from this screen is exit the game."""
+        """ Displays a game over screen in its own little loop. It is called when it has been determined that the
+        player's funds have run out. All the player can do from this screen is exit the game."""
         
         while True:
             for event in pygame.event.get():
@@ -60,7 +60,7 @@ def mainGame():
             time.sleep(0.7)
             pbar.update()
             
-    ######## DECK FUNCTIONS BEGIN ########
+    ######## DECK FUNCTIONS ########
     def deckDeal(deck, deadDeck):
         """ Shuffles the deck, takes the top 4 cards off the deck, appends them to the player's and dealer's hands, and
         returns the player's and dealer's hands. """
@@ -87,9 +87,8 @@ def mainGame():
         return deck, deadDeck, playerHand, dealerHand
 
     def hit(deck, deadDeck, hand):
-        """ Checks to see if the deck is gone, in which case it takes the cards from
-        the dead deck (cards that have been played and discarded)
-        and shuffles them in. Then if the player is hitting, it gives
+        """ Checks to see if the deck is gone, in which case it takes the cards from the dead deck
+        (cards that have been played and discarded) and shuffles them in. Then if the player is hitting, it gives
         a card to the player, or if the dealer is hitting, gives one to the dealer."""
 
         # if the deck is empty, shuffle in the dead deck
@@ -127,8 +126,8 @@ def mainGame():
             for card in hand:
                 # If the player would bust and he has an ace in his hand, the ace's value is diminished by 10    
                 # In situations where there are multiple aces in the hand, this checks to see if the total value
-                # would still be over 21 if the second ace wasn't changed to a value of one. If it's under 21, there's no need 
-                # to change the value of the second ace, so the loop breaks. 
+                # would still be over 21 if the second ace wasn't changed to a value of one. If it's under 21,
+                # there's no need to change the value of the second ace, so the loop breaks.
                 if card[1] == 'a':
                     totalValue -= 10
                     aceCount -= 1
@@ -145,7 +144,8 @@ def mainGame():
         return totalValue, aceFlag
         
     def blackJack(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite):
-        """ Called when the player or the dealer is determined to have blackjack. Hands are compared to determine the outcome. """
+        """ Called when the player or the dealer is determined to have blackjack. Hands are compared to
+        determine the outcome. """
 
         textFont = pygame.font.Font(None, 28)
 
@@ -156,14 +156,17 @@ def mainGame():
             # The opposing player ties the original blackjack getter because he also has blackjack
             # No money will be lost, and a new hand will be dealt
             displayFont = display(textFont, "Blackjack! The dealer also has blackjack, another round")
-            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = endRound(deck, playerHand, dealerHand, deadDeck, funds, 0, bet, cards, cardSprite)
+            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = \
+                endRound(deck, playerHand, dealerHand, deadDeck, funds, 0, bet, cards, cardSprite)
         elif playerValue == 21 and dealerValue != 21:
             # Dealer loses
             displayFont = display(textFont, "Blackjack! You won $%.2f." % (bet * 1.5))
-            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = endRound(deck, playerHand, dealerHand, deadDeck, funds, bet, 0, cards, cardSprite)
+            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = \
+                endRound(deck, playerHand, dealerHand, deadDeck, funds, bet, 0, cards, cardSprite)
         elif dealerValue == 21 and playerValue != 21:
             # Player loses, money is lost, and new hand will be dealt
-            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = endRound(deck, playerHand, dealerHand, deadDeck, funds, 0, bet, cards, cardSprite)
+            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = \
+                endRound(deck, playerHand, dealerHand, deadDeck, funds, 0, bet, cards, cardSprite)
             displayFont = display(textFont, "Dealer has blackjack! You lose $%.2f." % bet)
             
         return displayFont, playerHand, dealerHand, deadDeck, funds, roundEnd
@@ -174,7 +177,8 @@ def mainGame():
         font = pygame.font.Font(None, 28)
         displayFont = display(font, "You bust! You lost $%.2f." % moneyLost)
         
-        deck, playerHand, dealerHand, deadDeck, funds, roundEnd = endRound(deck, playerHand, dealerHand, deadDeck, funds, moneyGained, moneyLost, cards, cardSprite)
+        deck, playerHand, dealerHand, deadDeck, funds, roundEnd = \
+            endRound(deck, playerHand, dealerHand, deadDeck, funds, moneyGained, moneyLost, cards, cardSprite)
         
         return deck, playerHand, dealerHand, deadDeck, funds, roundEnd, displayFont
 
@@ -219,9 +223,9 @@ def mainGame():
         return deck, playerHand, dealerHand, deadDeck, funds, roundEnd 
         
     def compareHands(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite):
-        """ Called at the end of a round (after the player stands), or at the beginning of a round
-        if the player or dealer has blackjack. This function compares the values of the respective hands of
-        the player and the dealer and determines who wins the round based on the rules of blacjack. """
+        """ Called at the end of a round (after the player stands), or at the beginning of a round if the player
+        or dealer has blackjack. This function compares the values of the respective hands of the player and the
+        dealer and determines who wins the round based on the rules of blacjack. """
 
         textFont = pygame.font.Font(None, 28)
 
@@ -240,25 +244,28 @@ def mainGame():
             
         if playerValue > dealerValue and playerValue <= 21:
             # Player has beaten the dealer, and hasn't busted, therefore WINS
-            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = endRound(deck, playerHand, dealerHand, deadDeck, funds, bet, 0, cards, cardSprite)
+            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = \
+                endRound(deck, playerHand, dealerHand, deadDeck, funds, bet, 0, cards, cardSprite)
             displayFont = display(textFont, "You won $%.2f." % bet)
         elif playerValue == dealerValue and playerValue <= 21:
             # Tie
-            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = endRound(deck, playerHand, dealerHand, deadDeck, funds, 0, 0, cards, cardSprite)
+            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = \
+                endRound(deck, playerHand, dealerHand, deadDeck, funds, 0, 0, cards, cardSprite)
             displayFont = display(textFont, "It's a tie, another round!")
         elif dealerValue > 21 and playerValue <= 21:
             # Dealer has busted and player hasn't
-            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = endRound(deck, playerHand, dealerHand, deadDeck, funds, bet, 0, cards, cardSprite)
+            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = \
+                endRound(deck, playerHand, dealerHand, deadDeck, funds, bet, 0, cards, cardSprite)
             displayFont = display(textFont, "Dealer busts! You won $%.2f." % bet)
         else:
             # Dealer wins in every other siutation taht i can think of
-            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = endRound(deck, playerHand, dealerHand, deadDeck, funds, 0, bet, cards, cardSprite)
+            deck, playerHand, dealerHand, deadDeck, funds, roundEnd = \
+                endRound(deck, playerHand, dealerHand, deadDeck, funds, 0, bet, cards, cardSprite)
             displayFont = display(textFont, "Dealer wins! You lost $%.2f." % bet)
             
         return deck, deadDeck, roundEnd, funds, displayFont
-    ######## DECK FUNCTIONS END ########  
 
-    ######## SPRITE FUNCTIONS BEGIN ##########
+    ######## SPRITE FUNCTIONS ##########
     class cardSprite(pygame.sprite.Sprite):
         """ Sprite that displays a specific card. """
         
@@ -279,8 +286,8 @@ def mainGame():
             self.position = (735, 400)
             
         def update(self, mX, mY, deck, deadDeck, playerHand, cards, pCardPos, roundEnd, cardSprite, click):
-            """ If the button is clicked and the round is NOT over, Hits the player with a new card from the deck. It then creates a sprite
-            for the card and displays it. """
+            """ If the button is clicked and the round is NOT over, Hits the player with a new card from the deck.
+            It then creates a sprite for the card and displays it. """
             
             if roundEnd == 0:
                 self.image, self.rect = imageLoad("hit.png", 0)
@@ -312,7 +319,8 @@ def mainGame():
             self.image, self.rect = imageLoad("stand-grey.png", 0)
             self.position = (735, 365)
             
-        def update(self, mX, mY, deck, deadDeck, playerHand, dealerHand, cards, pCardPos, roundEnd, cardSprite, funds, bet, displayFont):
+        def update(self, mX, mY, deck, deadDeck, playerHand, dealerHand, cards, pCardPos, roundEnd,
+                   cardSprite, funds, bet, displayFont):
             """ If the button is clicked and the round is NOT over, let the player stand (take no more cards). """
             
             if roundEnd == 0:
@@ -326,7 +334,8 @@ def mainGame():
             if self.rect.collidepoint(mX, mY) == 1:
                 if roundEnd == 0: 
                     playClick()
-                    deck, deadDeck, roundEnd, funds, displayFont = compareHands(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite)
+                    deck, deadDeck, roundEnd, funds, displayFont = \
+                        compareHands(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite)
                 
             return deck, deadDeck, roundEnd, funds, playerHand, deadDeck, pCardPos, displayFont 
             
@@ -338,7 +347,8 @@ def mainGame():
             self.image, self.rect = imageLoad("double-grey.png", 0)
             self.position = (735, 330)
             
-        def update(self, mX, mY, deck, deadDeck, playerHand, dealerHand, playerCards, cards, pCardPos, roundEnd, cardSprite, funds, bet, displayFont):
+        def update(self, mX, mY, deck, deadDeck, playerHand, dealerHand, playerCards, cards, pCardPos,
+                   roundEnd, cardSprite, funds, bet, displayFont):
             """ If the button is clicked and the round is NOT over, let the player stand (take no more cards). """
             
             if roundEnd == 0 and funds >= bet * 2 and len(playerHand) == 2:
@@ -361,9 +371,10 @@ def mainGame():
                     playerCards.add(card)
                     pCardPos = (pCardPos[0] - 80, pCardPos[1])
         
-                    deck, deadDeck, roundEnd, funds, displayFont = compareHands(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite)
+                    deck, deadDeck, roundEnd, funds, displayFont = \
+                        compareHands(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite)
                     
-                    bet = bet / 2
+                    bet /= 2
 
             return deck, deadDeck, roundEnd, funds, playerHand, deadDeck, pCardPos, displayFont, bet
 
@@ -390,7 +401,8 @@ def mainGame():
             else:
                 return self.policySet[1][(dealerVal, playerVal)]
 
-        def update(self, mX, mY, deck, deadDeck, roundEnd, cardSprite, playerCards ,cards, playerHand, dealerHand, pCardPos, funds, bet, displayFont):
+        def update(self, mX, mY, deck, deadDeck, roundEnd, cardSprite, playerCards ,cards, playerHand,
+                   dealerHand, pCardPos, funds, bet, displayFont):
             """If the mouse position is on the ai button, and the mouse is clicking and roundEnd is 0, then ai will be
             triggered to handle the hit or action according to the policy table"""
 
@@ -434,11 +446,10 @@ def mainGame():
 
                     # stand
                     if playerVal <= 21 and self.choseAction(playerAceFlag, dealerVal, playerVal) is False:
-                        deck, deadDeck, roundEnd, funds, displayFont = compareHands(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite)
-
+                        deck, deadDeck, roundEnd, funds, displayFont = \
+                            compareHands(deck, deadDeck, playerHand, dealerHand, funds, bet, cards, cardSprite)
 
             return deck, deadDeck, roundEnd, playerHand, pCardPos, funds, bet, displayFont
-
 
     class dealButton(pygame.sprite.Sprite):
         """ A button on the right hand side of the screen that can be clicked at the end of a round to deal a
@@ -449,12 +460,12 @@ def mainGame():
             self.image, self.rect = imageLoad("deal.png", 0)
             self.position = (735, 485)
 
-        def update(self, mX, mY, deck, deadDeck, roundEnd, cardSprite, cards, playerHand, dealerHand, dCardPos, pCardPos, displayFont, playerCards, click, handsPlayed):
+        def update(self, mX, mY, deck, deadDeck, roundEnd, cardSprite, cards, playerHand, dealerHand,
+                   dCardPos, pCardPos, displayFont, playerCards, click, handsPlayed):
             """ If the mouse position collides with the button, and the mouse is clicking, and roundEnd does not = 0,
-            then Calls deckDeal to deal a hand to the player and a hand to the dealer. It then
-            takes the cards from the player's hand and the dealer's hand and creates sprites for them,
-            placing them on the visible table. The deal button can only be pushed after the round has ended
-            and a winner has been declared. """
+            then Calls deckDeal to deal a hand to the player and a hand to the dealer. It then takes the cards from
+            the player's hand and the dealer's hand and creates sprites for them, placing them on the visible table.
+            The deal button can only be pushed after the round has ended and a winner has been declared. """
             
             # Get rid of the in between-hands chatter
             textFont = pygame.font.Font(None, 28)
@@ -497,8 +508,6 @@ def mainGame():
                     roundEnd = 0
                     click = 0
                     handsPlayed += 1
-
-
                     
             return deck, deadDeck, playerHand, dealerHand, dCardPos, pCardPos, roundEnd, displayFont, click, handsPlayed
             
@@ -524,10 +533,9 @@ def mainGame():
                     
                 if bet < funds:
                     bet += 5.0
-                    # If the bet is not a multiple of 5, turn it into a multiple of 5
-                    # This can only happen when the player has gotten blackjack, and has funds that are not divisible by 5,
-                    # then loses money, and has a bet higher than his funds, so the bet is pulled down to the funds,
-                    # which are uneven.
+                    # If the bet is not a multiple of 5, turn it into a multiple of 5. This can only happen when
+                    # the player has gotten blackjack, and has funds that are not divisible by 5, then loses money,
+                    # and has a bet higher than his funds, so the bet is pulled down to the funds, which are uneven.
                     if bet % 5 != 0:
                         while bet % 5 != 0:
                             bet -= 1
@@ -592,9 +600,7 @@ def mainGame():
             self.color = (r, g, b)
             self.loading = self.font.render("LOADING", True, self.color)
 
-    ###### SPRITE FUNCTIONS END ######
-
-    ###### INITIALIZATION BEGINS ######
+    ###### INITIALIZATION ######
     # This font is used to display text on the right-hand side of the screen
     textFont = pygame.font.Font(None, 28)
 
@@ -646,9 +652,8 @@ def mainGame():
     firstTime = 1
 
     showProgressBar(pbar, aiButton.continueFlag)
-    ###### INITILIZATION ENDS ########
     
-    ###### MAIN GAME LOOP BEGINS #######
+    ###### MAIN GAME LOOP #######
     while True:
         screen.blit(background, backgroundRect)
 
@@ -745,11 +750,6 @@ def mainGame():
         # Updates the contents of the display
         pygame.display.flip()
 
-    ###### MAIN GAME LOOP ENDS ######
-
-###### MAIN GAME FUNCTION ENDS ######
-
-
-# start the game
+# start the game, enjoy!
 if __name__ == "__main__":
     mainGame()
